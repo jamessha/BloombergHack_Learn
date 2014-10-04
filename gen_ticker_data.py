@@ -131,7 +131,7 @@ def main():
     print "Failed to open //blp/refdata"
     return
 
-  tickers = ['FB', 'MSFT', 'IBM', 'TWTR']
+  tickers = ['FB', 'MSFT', 'IBM', 'TWTR', 'AAPL', 'GOOG']
   data = {}
   data['info'] = 'Provides ticker->[(date, value)]'
   data['tickers'] = {}
@@ -141,35 +141,36 @@ def main():
     today = datetime.date.today()
     today -= datetime.timedelta(days=1)
     year = 2014
-    month = 9
+    months = [8, 9]
+    first_weekends = [2, 6]
 
     ticker_vals = []
-    for day in xrange(1, 31):
-      avg_val = 0.0
-      nval = 0
-      if (day - first_weekend) % 7 == 0 or (day - first_weekend - 1) % 7 == 0:
-        continue
-      for hour in xrange(13, 14):
-        date = datetime.datetime(year, month, day, hour, 30)
-        rq_options['startDateTime'] = date
-        rq_options['endDateTime'] = date
-        rq_options['security'] = '%s US Equity' % ticker
-
-        tick_data = []
-        try:
-          sendIntradayTickRequest(session, rq_options)
-          tick_data = eventLoop(session)
-        except Exception as e:
-          print 'Exception raised', e
-          session.stop()
-        for val in tick_data:
-          avg_val += val
-        nval += len(tick_data)
-      if len(tick_data) == 0:
+    for month, first_weekend in zip(months, first_weekends):
+      for day in xrange(1, 31):
+        avg_val = 0.0
+        nval = 0
+        if (day - first_weekend) % 7 == 0 or (day - first_weekend - 1) % 7 == 0:
           continue
-      avg_val /= nval
-      print day
-      ticker_vals.append(((year, month, day), avg_val))
+        for hour in xrange(13, 14):
+          date = datetime.datetime(year, month, day, hour, 30)
+          rq_options['startDateTime'] = date
+          rq_options['endDateTime'] = date
+          rq_options['security'] = '%s US Equity' % ticker
+
+          tick_data = []
+          try:
+            sendIntradayTickRequest(session, rq_options)
+            tick_data = eventLoop(session)
+          except Exception as e:
+            print 'Exception raised', e
+            session.stop()
+          for val in tick_data:
+            avg_val += val
+          nval += len(tick_data)
+        if len(tick_data) == 0:
+            continue
+        avg_val /= nval
+        ticker_vals.append(((year, month, day), avg_val))
     data['tickers'][ticker] = ticker_vals
     print len(ticker_vals)
 

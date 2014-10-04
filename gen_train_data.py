@@ -14,6 +14,12 @@ def parseDatetimeString(s):
   return date
 
 
+def moving_average(a, n=3) :
+  ret = np.cumsum(a, dtype=float)
+  ret[n:] = ret[n:] - ret[:-n]
+  return ret[n - 1:] / n
+
+
 def main():
   f = open('data/ticker_data.pickle')
   data = pickle.load(f)
@@ -26,23 +32,36 @@ def main():
   test_y = []
   for idx, (ticker, datum) in enumerate(data['tickers'].items()):
     print '{0}/{1}'.format(idx+1, len(data['tickers'].keys()))
-    r = random.random()
-    X = train_X
-    y = train_y
-    if r < 0.1:
-      X = test_X
-      y = test_y
-    for i in xrange(1, len(datum)):
-      _, prev_val = datum[i-1]
+    n = 3
+    vals = []
+    dates = []
+    for i in xrange(len(datum)):
       date, val = datum[i]
-      delta = (val - prev_val)/prev_val
+      vals.append(val)
+      dates.append(date)
+    vals = np.array(vals)
+    vals = moving_average(vals, n=n)
+    dates = dates[:-(n-1)]
+
+    for i in xrange(1, len(dates)-1):
+      r = random.random()
+      X = train_X
+      y = train_y
+      if r < 0.1:
+        X = test_X
+        y = test_y
+      prev_val = vals[i-1]
+      next_val = vals[i+1]
+      val = vals[i]
+      date = dates[i]
+      delta = (next_val - val)/val
       thresh = 0.01
-      if delta < thresh:
-        label = 1
+      if delta < -thresh:
+        label = 0.0
       elif delta > thresh:
-        label = 2
+        label = 1.0
       else:
-        label = 0
+        label = (delta + thresh)/2/thresh
 
 
       year, month, day = date
@@ -60,8 +79,10 @@ def main():
           avg_sent += sent
         avg_sent /= (len(items) - 4)
 
-      X.append([avg_sent, prev_val, val])
+      X.append([avg_sent, val, prev_val])
       y.append(label)
+
+      print (next_val-val)/val, avg_sent
 
   train_X = np.array(train_X)
   train_y = np.array(train_y)
@@ -73,13 +94,6 @@ def main():
   np.save('data/train_y.npy', train_y)
   np.save('data/test_X.npy', test_X)
   np.save('data/test_y.npy', test_y)
-
-  # Calvin examples
-  #rss_url = 'http://finance.yahoo.com/rss/headline?s=%s' % ticker
-  #feed = feedparser.parse(rss_url)
-  #for item in feed['items']:
-  #  item['title']
-
 
 if __name__ == '__main__':
   main()
