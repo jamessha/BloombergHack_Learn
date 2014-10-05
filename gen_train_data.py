@@ -4,7 +4,6 @@ import random
 import numpy as np
 from bs4 import BeautifulSoup
 from textblob import TextBlob
-#from multiprocessing import Process, Lock, Pool
 from threading import Thread, Lock
 
 

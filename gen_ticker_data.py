@@ -2,6 +2,7 @@ import blpapi
 import datetime
 import pickle
 from optparse import OptionParser
+from threading import Thread, Lock
 
 
 SESSION_TERMINATED = blpapi.Name("SessionTerminated")
@@ -119,6 +120,38 @@ def parseTickerList(filepath):
   return toks
 
 
+def queryData(session, year, month, day, hour, ticker, data, lock):
+  date = datetime.datetime(year, month, day, hour, 30)
+  print 'Querying', ticker, date
+
+  rq_options = {}
+  rq_options['startDateTime'] = date
+  rq_options['endDateTime'] = date
+  rq_options['security'] = '%s US Equity' % ticker
+
+  tick_data = []
+  try:
+    sendIntradayTickRequest(session, rq_options)
+    tick_data = eventLoop(session)
+  except Exception as e:
+    print 'Exception raised', e
+    session.stop()
+
+  if not tick_data:
+    return
+
+  avg_val = 0.0
+  for val in tick_data:
+    avg_val += val
+  avg_val /= len(tick_data)
+
+  lock.acquire()
+  data['tickers'][ticker].append(((year, month, day, hour), avg_val))
+  lock.release()
+
+  print 'Done', ticker, date
+
+
 def main():
   parseTickerList('ticker_list.txt')
   options = parseCmdLine()
@@ -148,8 +181,9 @@ def main():
   data['info'] = 'Provides ticker->[(date, value)]'
   data['tickers'] = {}
 
+  to_query = []
   for ticker in tickers:
-    rq_options = {}
+    data['tickers'][ticker] = []
     today = datetime.date.today()
     today -= datetime.timedelta(days=1)
     year = 2014
@@ -164,29 +198,17 @@ def main():
         if (day - first_weekend) % 7 == 0 or (day - first_weekend - 1) % 7 == 0:
           continue
         for hour in xrange(13, 20):
-          date = datetime.datetime(year, month, day, hour, 30)
-          rq_options['startDateTime'] = date
-          rq_options['endDateTime'] = date
-          rq_options['security'] = '%s US Equity' % ticker
+          to_query.append((year, month, day, hour, ticker))
 
-          tick_data = []
-          try:
-            sendIntradayTickRequest(session, rq_options)
-            tick_data = eventLoop(session)
-          except Exception as e:
-            print 'Exception raised', e
-            session.stop()
-          if not tick_data:
-            continue
-          for val in tick_data:
-            avg_val += val
-          nval += len(tick_data)
-        if nval == 0:
-            continue
-        avg_val /= nval
-        ticker_vals.append(((year, month, day), avg_val))
-    data['tickers'][ticker] = ticker_vals
-    print len(ticker_vals)
+  lock = Lock()
+  threads = []
+  for year, month, day, hour, ticker in to_query:
+    t = Thread(target=queryData, args=(session, year, month, day, hour, ticker, data, lock))
+    t.start()
+    threads.append(t)
+
+  for t in threads():
+    t.join()
 
   #print data
   f = open('data/ticker_data.pickle', 'w+')
