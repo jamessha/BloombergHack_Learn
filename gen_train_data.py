@@ -6,6 +6,9 @@ from bs4 import BeautifulSoup
 from textblob import TextBlob
 
 
+MONTHS = {'May': 5, 'Jun': 6, 'Jul': 7, 'Aug': 8, 'Sep': 9, 'Oct': 10}
+
+
 def parseDatetimeString(s):
   toks = s.split('T')
   date = toks[0]
@@ -63,26 +66,36 @@ def main():
       else:
         label = (delta + thresh)/2/thresh
 
-
       year, month, day = date
       url = 'http://finance.yahoo.com/q/h?s={0}&t={1}-{2}-{3}'.format(ticker, year, month, day)
       soup = BeautifulSoup(urllib2.urlopen(url).read())
       table = soup.find(id='yfncsumtab')
       items = table.find_all('a')
+      citations = table.find_all('cite')
+      item_dates = []
+      for item in citations:
+        item_date = item.find('span')
+        text = item_date.get_text(strip=True)
+        toks = text.split()
+        item_dates.append((MONTHS[toks[-2]], int(toks[-1][:-1])))
+
       avg_sent = 0
+      num_items = 0
       # 4 useless things at the end
       if len(items) > 4:
-        for item in items[:-4]:
+        for item_date, item in zip(item_dates, items[:-4]):
+          if item_date[0] != month or item_date[1] != day:
+            break
           text = item.get_text(strip=True)
           blob = TextBlob(text)
           sent = blob.sentiment.polarity
           avg_sent += sent
-        avg_sent /= (len(items) - 4)
-
+          num_items += 1
+        if num_items != 0:
+          avg_sent /= num_items
+      print delta, avg_sent
       X.append([avg_sent, val, prev_val])
       y.append(label)
-
-      print (next_val-val)/val, avg_sent
 
   train_X = np.array(train_X)
   train_y = np.array(train_y)

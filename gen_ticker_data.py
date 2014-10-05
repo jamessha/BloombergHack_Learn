@@ -12,6 +12,8 @@ TYPE = blpapi.Name("type")
 VALUE = blpapi.Name("value")
 TICK_SIZE = blpapi.Name("size")
 COND_CODE = blpapi.Name("conditionCodes")
+CATEGORY = blpapi.Name("category")
+MESSAGE = blpapi.Name("message")
 
 
 def parseCmdLine():
@@ -109,7 +111,16 @@ def eventLoop(session):
             return
 
 
+def parseTickerList(filepath):
+  f = open(filepath, 'r')
+  line = f.readline()
+  f.close()
+  toks = line.split('\r')
+  return toks
+
+
 def main():
+  parseTickerList('ticker_list.txt')
   options = parseCmdLine()
 
   # Fill SessionOptions
@@ -131,7 +142,8 @@ def main():
     print "Failed to open //blp/refdata"
     return
 
-  tickers = ['FB', 'MSFT', 'IBM', 'TWTR', 'AAPL', 'GOOG']
+  #tickers = ['FB', 'MSFT', 'IBM', 'TWTR', 'AAPL', 'GOOG']
+  tickers = parseTickerList('ticker_list.txt')
   data = {}
   data['info'] = 'Provides ticker->[(date, value)]'
   data['tickers'] = {}
@@ -141,7 +153,7 @@ def main():
     today = datetime.date.today()
     today -= datetime.timedelta(days=1)
     year = 2014
-    months = [8, 9]
+    months = range(8, 10)
     first_weekends = [2, 6]
 
     ticker_vals = []

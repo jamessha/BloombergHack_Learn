@@ -20,8 +20,6 @@ def test(clf, X, y):
 
 def train(X, y):
   clf = svm.SVR(kernel='rbf', C=1e3, gamma=0.1)
-  #print X[2:4, :]
-  #print y[2:4]
   clf.fit(X, y)
   return clf
 
@@ -40,14 +38,11 @@ def main():
 
   #print train_y
   clf = train(train_X, train_y)
-  dec = clf.decision_function(train_X[3, :])
-  print dec
   train_acc = test(clf, train_X, train_y)
   test_acc = test(clf, test_X, test_y)
   print 'training accuracy', train_acc
   print 'testing accuracy', test_acc
 
-  print clf.predict([[0.8, 0.1, 0.5]])
 
 
 if __name__ == '__main__':
