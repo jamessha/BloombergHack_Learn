@@ -24,7 +24,7 @@ def moving_average(a, n=3) :
 
 
 def main():
-  f = open('data/ticker_data_bak.pickle')
+  f = open('data/ticker_data.pickle')
   data = pickle.load(f)
   f.close()
 
@@ -46,15 +46,17 @@ def main():
     vals = moving_average(vals, n=n)
     dates = dates[:-(n-1)]
 
-    for i in xrange(2, len(dates)-1):
+    ntail = 4
+    for i in xrange(ntail, len(dates)-1):
       r = random.random()
       X = train_X
       y = train_y
       if r < 0.1:
         X = test_X
         y = test_y
-      prev_val_1 = vals[i-1]
-      prev_val_2 = vals[i-2]
+      prev_deltas = []
+      for j in xrange(ntail):
+        prev_deltas.append((vals[i-j]-vals[i-j-1])/vals[i-j-1])
       next_val = vals[i+1]
       val = vals[i]
       date = dates[i]
@@ -93,7 +95,7 @@ def main():
           num_items += 1
         if num_items != 0:
           avg_sent /= num_items
-      X.append([avg_sent, val, (prev_val_1-prev_val_2)/prev_val_2, (val-prev_val_1)/prev_val_1])
+      X.append([avg_sent] + prev_deltas)
       y.append(label)
 
   train_X = np.array(train_X)

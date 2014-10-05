@@ -163,7 +163,7 @@ def main():
         nval = 0
         if (day - first_weekend) % 7 == 0 or (day - first_weekend - 1) % 7 == 0:
           continue
-        for hour in xrange(13, 14):
+        for hour in xrange(13, 20):
           date = datetime.datetime(year, month, day, hour, 30)
           rq_options['startDateTime'] = date
           rq_options['endDateTime'] = date

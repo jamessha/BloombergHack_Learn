@@ -58,9 +58,9 @@ def preprocess(X):
   pass
 
 def main():
-  train_X = np.load('data/train_X.npy')
+  train_X = np.load('data/train_X.npy')[:, :]
   train_y = np.load('data/train_y.npy')
-  test_X = np.load('data/test_X.npy')
+  test_X = np.load('data/test_X.npy')[:, :]
   test_y = np.load('data/test_y.npy')
   print 'Training examples:', train_X.shape[0]
   print 'Testing examples:', test_X.shape[0]
