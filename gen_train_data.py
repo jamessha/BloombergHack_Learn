@@ -24,7 +24,7 @@ def moving_average(a, n=3) :
 
 
 def main():
-  f = open('data/ticker_data.pickle')
+  f = open('data/ticker_data_bak.pickle')
   data = pickle.load(f)
   f.close()
 
@@ -46,29 +46,29 @@ def main():
     vals = moving_average(vals, n=n)
     dates = dates[:-(n-1)]
 
-    for i in xrange(1, len(dates)-1):
+    for i in xrange(2, len(dates)-1):
       r = random.random()
       X = train_X
       y = train_y
       if r < 0.1:
         X = test_X
         y = test_y
-      prev_val = vals[i-1]
+      prev_val_1 = vals[i-1]
+      prev_val_2 = vals[i-2]
       next_val = vals[i+1]
       val = vals[i]
       date = dates[i]
       delta = (next_val - val)/val
-      thresh = 0.01
-      if delta < -thresh:
-        label = 0.0
-      elif delta > thresh:
-        label = 1.0
-      else:
-        label = (delta + thresh)/2/thresh
+      label = delta*100
 
       year, month, day = date
       url = 'http://finance.yahoo.com/q/h?s={0}&t={1}-{2}-{3}'.format(ticker, year, month, day)
-      soup = BeautifulSoup(urllib2.urlopen(url).read())
+      try:
+        soup = BeautifulSoup(urllib2.urlopen(url, timeout=10).read())
+      except:
+        pass
+      if not soup:
+        continue
       table = soup.find(id='yfncsumtab')
       items = table.find_all('a')
       citations = table.find_all('cite')
@@ -93,8 +93,7 @@ def main():
           num_items += 1
         if num_items != 0:
           avg_sent /= num_items
-      print delta, avg_sent
-      X.append([avg_sent, val, prev_val])
+      X.append([avg_sent, val, (prev_val_1-prev_val_2)/prev_val_2, (val-prev_val_1)/prev_val_1])
       y.append(label)
 
   train_X = np.array(train_X)

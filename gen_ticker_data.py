@@ -176,10 +176,12 @@ def main():
           except Exception as e:
             print 'Exception raised', e
             session.stop()
+          if not tick_data:
+            continue
           for val in tick_data:
             avg_val += val
           nval += len(tick_data)
-        if len(tick_data) == 0:
+        if nval == 0:
             continue
         avg_val /= nval
         ticker_vals.append(((year, month, day), avg_val))
