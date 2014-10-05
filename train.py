@@ -1,3 +1,4 @@
+import pickle
 import numpy as np
 from sklearn import svm, preprocessing
 
@@ -84,24 +85,35 @@ def main():
   preprocess(test_X)
 
   #print train_y
-  # correct/total
+  print 'Training...'
   clf = train(train_X, train_y)
+
+  print 'Saving...'
+  f = open('data/model.pickle', 'w+')
+  pickle.dump(clf, f)
+  f.close()
+
+  print 'Testing'
+  print '============================='
+  # correct/total
   train_acc = check_acc(clf, train_X, train_y)
   test_acc = check_acc(clf, test_X, test_y)
   print 'training accuracy', train_acc
-  print 'testing accuracy\n', test_acc
+  print 'testing accuracy', test_acc
+  print
 
   # correct activations/actual activations
   train_precision = check_precision(clf, train_X, train_y)
   test_precision = check_precision(clf, test_X, test_y)
   print 'training precision', train_precision
-  print 'testing precision\n', test_precision
+  print 'testing precision', test_precision
+  print
 
   # correct activations/should activations
   train_recall = check_recall(clf, train_X, train_y)
   test_recall = check_recall(clf, test_X, test_y)
   print 'training recall', train_recall
-  print 'testing recall\n', test_recall
+  print 'testing recall', test_recall
 
 
 if __name__ == '__main__':
