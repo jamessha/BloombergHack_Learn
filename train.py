@@ -18,8 +18,8 @@ def check_acc(clf, X, y):
   #print X
   formatRes(z)
   formatRes(y)
-  print y
-  print z
+  #print y
+  #print z
 
   diff = np.equal(z, y)
   correct = float(abs(diff).sum())
