@@ -204,13 +204,17 @@ def main():
   threads = []
   for year, month, day, hour, ticker in to_query:
     t = Thread(target=queryData, args=(session, year, month, day, hour, ticker, data, lock))
-    t.start()
     threads.append(t)
 
-  for t in threads():
-    t.join()
+  batch_size = 50
+  for k in xrange(len(threads)/batch_size):
+    for l in xrange(batch_size*k, min(batch_size*(k+1), len(threads))):
+      threads[l].start()
 
-  #print data
+    for l in xrange(batch_size*k, min(batch_size*(k+1), len(threads))):
+      threads[l].join()
+
+  #print data['tickers']['PBR']
   f = open('data/ticker_data.pickle', 'w+')
   pickle.dump(data, f)
   f.close()

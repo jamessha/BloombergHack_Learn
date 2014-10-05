@@ -57,13 +57,14 @@ def processTicker(ticker, datum, l, train_X, train_y, test_X, test_y):
     delta = (next_val - val)/val
     label = delta*100
 
-    year, month, day = date
+    year, month, day, hour = date
     url = 'http://finance.yahoo.com/q/h?s={0}&t={1}-{2}-{3}'.format(ticker, year, month, day)
     try:
       txt = urllib2.urlopen(url, timeout=10).read()
       soup = BeautifulSoup(txt)
     except:
-      pass
+      print 'Could not open', url
+      soup = None
     if not soup:
       continue
     table = soup.find(id='yfncsumtab')
@@ -98,7 +99,7 @@ def processTicker(ticker, datum, l, train_X, train_y, test_X, test_y):
 
 
 def main():
-  f = open('data/bak/ticker_data.pickle')
+  f = open('data/ticker_data.pickle')
   data = pickle.load(f)
   f.close()
 

@@ -27,7 +27,7 @@ def check_acc(clf, X, y):
   return acc
 
 
-def check_pos_acc(clf, X, y):
+def check_recall(clf, X, y):
   z = clf.predict(X)
   formatRes(z)
   formatRes(y)
@@ -41,8 +41,23 @@ def check_pos_acc(clf, X, y):
     if y[i] == z[i]:
       num_correct += 1
 
-  acc = num_correct/num_total
-  return acc
+  return num_correct/num_total
+
+
+def check_precision(clf, X, y):
+  z = clf.predict(X)
+  formatRes(z)
+  formatRes(y)
+  num_correct = 0.0
+  num_total = 0.0
+  for i in xrange(y.shape[0]):
+    if z[i] == 0:
+      continue
+    num_total += 1
+    if y[i] == z[i]:
+      num_correct += 1
+
+  return num_correct/num_total
 
 
 def train(X, y):
@@ -69,19 +84,24 @@ def main():
   preprocess(test_X)
 
   #print train_y
+  # correct/total
   clf = train(train_X, train_y)
   train_acc = check_acc(clf, train_X, train_y)
   test_acc = check_acc(clf, test_X, test_y)
-  print '[total] training accuracy', train_acc
-  print '[total] testing accuracy', test_acc
+  print 'training accuracy', train_acc
+  print 'testing accuracy\n', test_acc
 
-  pos_train_acc = check_pos_acc(clf, train_X, train_y)
-  pos_test_acc = check_pos_acc(clf, test_X, test_y)
-  print '[positives] training accuracy', pos_train_acc
-  print '[positives] testing accuracy', pos_test_acc
+  # correct activations/actual activations
+  train_precision = check_precision(clf, train_X, train_y)
+  test_precision = check_precision(clf, test_X, test_y)
+  print 'training precision', train_precision
+  print 'testing precision\n', test_precision
 
-
-
+  # correct activations/should activations
+  train_recall = check_recall(clf, train_X, train_y)
+  test_recall = check_recall(clf, test_X, test_y)
+  print 'training recall', train_recall
+  print 'testing recall\n', test_recall
 
 
 if __name__ == '__main__':
