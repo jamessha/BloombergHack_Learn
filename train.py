@@ -1,6 +1,6 @@
 import pickle
 import numpy as np
-from sklearn import svm, preprocessing
+from sklearn import svm, preprocessing, decomposition
 
 
 def formatRes(z):
@@ -69,10 +69,6 @@ def train(X, y):
   return clf
 
 
-def preprocess(X):
-  #preprocessing.scale(X, copy=False)
-  pass
-
 def main():
   train_X = np.load('data/train_X.npy')[:, :]
   train_y = np.load('data/train_y.npy')
@@ -81,8 +77,10 @@ def main():
   print 'Training examples:', train_X.shape[0]
   print 'Testing examples:', test_X.shape[0]
 
-  preprocess(train_X)
-  preprocess(test_X)
+  # preprocessing
+  scaler = preprocessing.StandardScaler().fit(train_X)
+  scaler.transform(train_X)
+  scaler.transform(test_X)
 
   #print train_y
   print 'Training...'
@@ -90,7 +88,10 @@ def main():
 
   print 'Saving...'
   f = open('data/model.pickle', 'w+')
-  pickle.dump(clf, f)
+  model = {}
+  model['classifier'] = clf
+  model['scaler'] = scaler
+  pickle.dump(model, f)
   f.close()
 
   print 'Testing'
